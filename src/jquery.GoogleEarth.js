@@ -42,16 +42,12 @@
 		//Default options
 		defaults : { 
 			id              : null,
-			placeholder     : null,
 			layer_borders   : false,  
 			layer_roads     : false,
 			layer_buildings : false,
 			layer_terrain   : false,
 			sun             : false,
 			controls        : true,
-			latitude        : null,
-			longitude       : null,
-			altitude        : 150,
 			tilt            : null,
 			heading         : null
 		},
@@ -137,7 +133,7 @@
 		},
 		
 		_pluginFailure: function (instance) {
-			console.log('Fail!');
+			console.log('Unable to initialize Google Earth Plugin!');
 			GE._initialized = false;
 		}
 	});
