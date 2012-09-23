@@ -69,7 +69,7 @@
 		init: function (opts) {
 			// Extend the defaults
 			GE.opts = $.extend(true, {}, GE.defaults, opts);
-			if (GE.opts.id == null) {
+            if (GE.opts.id === null) {
 				console.log('You need to specify an id for the place holder');
 				return;
 			}
@@ -81,7 +81,7 @@
 		},
         
         _pluginInit: function (instance) {
-    		GE.ge = instance;
+            GE.ge = instance;
 			GE._initialized = true;
 			GE.ge.getWindow().setVisibility(true);
 			GE.ge.getNavigationControl().setVisibility(GE.opts.controls ? GE.ge.VISIBILITY_SHOW : GE.ge.VISIBILITY_HIDE);
@@ -110,12 +110,12 @@
         /*View methods*/
         setViewType: function(viewType) {
             if (viewType == 'lookat'){
-                if (GE.opts.view_type != 'lookat' || GE.view == null) {
+            if (GE.opts.view_type != 'lookat' || GE.view === null) {
                     GE.view = GE.ge.getView().copyAsLookAt(GE.ge.ALTITUDE_RELATIVE_TO_GROUND);
                     GE.opts.view_type = 'lookat';
                 }
             } else if(viewType == 'view') {
-                if (GE.opts.view_type != 'view' || GE.view == null) {
+                if (GE.opts.view_type != 'view' || GE.view === null) {
                     GE.view = GE.ge.getView().copyAsCamera(GE.ge.ALTITUDE_RELATIVE_TO_GROUND);
                     GE.opts.view_type = 'view';    
                 }
