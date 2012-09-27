@@ -9,7 +9,11 @@
 		$(document).ready(function(){
 			$.GoogleEarth({
 				id: 'map',
-				sun: false
+				sun: false,
+				viewEvent: 'viewchangeend',
+				viewListener: function(){
+					console.log('This is the viewchangeend callback!: ' + $.GoogleEarth.getView().getLatitude());
+				}
 			});
 		});
 	</script>

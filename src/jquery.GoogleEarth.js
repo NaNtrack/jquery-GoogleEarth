@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  * jQuery Plugin for Google Earth API 
- * jquery.GoogleEarth.js v0.1
+ * jquery.GoogleEarth.js v1.0
  * https://github.com/delpho/jquery-GoogleEarth
  * ============================================================================
  * 
@@ -26,18 +26,82 @@
  * DEALINGS IN THE SOFTWARE.
  * 
  */
-(function (window, document, $, undefined) {
+(function ($, undefined) {
 	"use strict";
 
-	var W  = $(window),
-		D  = $(document),
-		GE = $.GoogleEarth = function () {
-			GE.init.apply( this, arguments );
-		};
+	//Private vars
+	var _initialized = false; //Google Earth Plugin initialized
+	
+	//Private methods
+	var _init = function (opts) {
+		// Extend the defaults
+		GE.opts = $.extend(true, {}, GE.defaults, opts);
+		if (GE.opts.id === null) {
+			GE.debug && console.log('You need to specify an id for the place holder');
+			return;
+		}
+		google.setOnLoadCallback(function(){
+			if(!_initialized) {
+				google.earth.createInstance(GE.opts.id, _pluginInit, _pluginFailure);
+			}
+		});
+	};
+	
+	var _pluginInit = function (instance) {
+		GE.ge = instance;
+		_initialized = true;
+		GE.ge.getWindow().setVisibility(true);
+		GE.ge.getNavigationControl().setVisibility(GE.opts.controls ? GE.ge.VISIBILITY_SHOW : GE.ge.VISIBILITY_HIDE);
+		_layer(GE.ge.LAYER_BORDERS, GE.opts.layer_borders);
+		_layer(GE.ge.LAYER_ROADS, GE.opts.layer_roads);
+		_layer(GE.ge.LAYER_BUILDINGS, GE.opts.layer_buildings);
+		_layer(GE.ge.LAYER_TERRAIN, GE.opts.layer_terrain);
+		GE.ge.getSun().setVisibility(GE.opts.sun);
+		GE.setViewType(GE.opts.view_type);
+		if (GE.opts.latitude || GE.opts.longitude) GE.setPosition(GE.opts.latitude, GE.opts.longitude);
+		if (GE.opts.tilt) GE.setTilt(GE.opts.tilt);
+		if (GE.opts.heading) GE.setHeading(GE.opts.heading);
+		if (GE.opts.range) GE.setRange(GE.opts.range);
+		if (GE.opts.altitude) GE.setAltitude(GE.opts.altitude);
+		GE.addViewListener('viewchangeend', function(){
+			var view = GE.getView();
+			if(GE.opts.view_type == 'lookat') {
+				GE.opts.range = view.getRange();
+				GE.opts.altitude = null;
+			} else {
+				GE.opts.altitude = view.getAltitude();
+				GE.opts.range = null;
+			}
+			GE.opts.latitude = view.getLatitude();
+			GE.opts.longitude = view.getLongitude();
+			GE.opts.tilt = view.getTilt();
+			GE.opts.heading = view.getHeading();
+		});
+		if (GE.opts.viewListener && GE.opts.viewEvent) GE.addViewListener(GE.opts.viewEvent, GE.opts.viewListener);
+	};
+
+	var _pluginFailure = function (instance) {
+		GE.debug && console.log('Unable to initialize Google Earth Plugin!');
+		_initialized = false;
+	};
+        
+	var _updateView = function () {
+		GE.ge.getView().setAbstractView(GE.view);
+	};
+	
+	var _layer = function (name, visible) {
+			if (!_initialized) return this;
+			GE.ge.getLayerRoot().enableLayerById(name, visible);
+			return this;
+	};
+
+	var GE = $.GoogleEarth = function () {
+		_init.apply( this, arguments );
+	};
 	
 	$.extend(GE, {
 		//the version of this plugin
-		version : '0.1',
+		version : '1.0',
 		
 		//Default options
 		defaults : { 
@@ -48,184 +112,221 @@
 			layer_terrain   : false,
 			sun             : false,
 			controls        : true,
-            view_type       : 'lookat',
+			view_type       : 'lookat',
 			latitude        : null,
-            longitude       : null,
-            tilt            : null,
+			longitude       : null,
+			tilt            : null,
 			heading         : null,
-            range           : null,
-            altitude        : null
+			range           : null,
+			altitude        : null,
+			viewEvent       : null,
+			viewListener    : null
 		},
-         
-        //View
-        view : null,
         
-        //Google Earth instance
-        ge: null,
-        
-		//Google Earth Plugin initialized
-		_initialized : false,
+		//Debug: true or false
+		debug: true,
 		
-		init: function (opts) {
-			// Extend the defaults
-			GE.opts = $.extend(true, {}, GE.defaults, opts);
-            if (GE.opts.id === null) {
-				console.log('You need to specify an id for the place holder');
-				return;
-			}
-			google.setOnLoadCallback(function(){
-				if(!GE._initialized) {
-					google.earth.createInstance(GE.opts.id, GE._pluginInit, GE._pluginFailure);
+		//View
+		view : null,
+		
+		//Kml objects
+		kmlObjects: [],
+        
+		//Google Earth instance
+		ge: null,
+		
+		/*Listeners*/
+		addViewListener: function (event, callback) {
+			google.earth.addEventListener(GE.ge.getView(), event, callback);
+		},
+		
+		removeViewListener: function(event, callback) {
+			google.earth.removeEventListener(GE.ge.getView(),event, callback);
+		},
+        
+		/*View methods*/
+		setViewType: function(viewType) {
+			if (viewType == 'lookat'){
+				if (GE.opts.view_type != 'lookat' || GE.view === null) {
+					GE.view = GE.ge.getView().copyAsLookAt(GE.ge.ALTITUDE_RELATIVE_TO_GROUND);
+					GE.opts.view_type = 'lookat';
 				}
-			});
+			} else if(viewType == 'camera') {
+				if (GE.opts.view_type != 'camera' || GE.view === null) {
+					GE.view = GE.ge.getView().copyAsCamera(GE.ge.ALTITUDE_RELATIVE_TO_GROUND);
+					GE.opts.view_type = 'camera';    
+				}
+			} else {
+				GE.debug && console.log('Invalid view type, please use \'lookat\' or \'camera\'');
+				GE.setViewType('lookat');
+			}
+			return this;
 		},
-        
-        _pluginInit: function (instance) {
-            GE.ge = instance;
-			GE._initialized = true;
-			GE.ge.getWindow().setVisibility(true);
-			GE.ge.getNavigationControl().setVisibility(GE.opts.controls ? GE.ge.VISIBILITY_SHOW : GE.ge.VISIBILITY_HIDE);
-			GE._layer(GE.ge.LAYER_BORDERS, GE.opts.layer_borders);
-			GE._layer(GE.ge.LAYER_ROADS, GE.opts.layer_roads);
-			GE._layer(GE.ge.LAYER_BUILDINGS, GE.opts.layer_buildings);
-			GE._layer(GE.ge.LAYER_TERRAIN, GE.opts.layer_terrain);
-			GE.ge.getSun().setVisibility(GE.opts.sun);
-            GE.setViewType(GE.opts.view_type);
-            if (GE.opts.latitude || GE.opts.longitude) GE.setPosition(GE.opts.latitude, GE.opts.longitude);
-            if (GE.opts.tilt) GE.setTilt(GE.opts.tilt);
-            if (GE.opts.heading) GE.setHeading(GE.opts.heading);
-            if (GE.opts.range) GE.setRange(GE.opts.range);
-            if (GE.opts.altitude) GE.setAltitude(GE.opts.altitude);
-        },
-        
-		_pluginFailure: function (instance) {
-			console.log('Unable to initialize Google Earth Plugin!');
-			GE._initialized = false;
-		},
-        
-        _updateView: function () {
-            GE.ge.getView().setAbstractView(GE.view);  
-        },
-        
-        /*View methods*/
-        setViewType: function(viewType) {
-            if (viewType == 'lookat'){
-            if (GE.opts.view_type != 'lookat' || GE.view === null) {
-                    GE.view = GE.ge.getView().copyAsLookAt(GE.ge.ALTITUDE_RELATIVE_TO_GROUND);
-                    GE.opts.view_type = 'lookat';
-                }
-            } else if(viewType == 'view') {
-                if (GE.opts.view_type != 'view' || GE.view === null) {
-                    GE.view = GE.ge.getView().copyAsCamera(GE.ge.ALTITUDE_RELATIVE_TO_GROUND);
-                    GE.opts.view_type = 'view';    
-                }
-            } else {
-                console.log('Invalid view type, please use \'lookat\' or \'view\'');
-                GE.setViewType('lookat');
-            }
-            return this;
-        },
 		
-        setPosition: function (lat, lng) {
-            if (!GE._initialized) return this;
-            if (lat || lng) {
-                if (lat) {
-                    GE.view.setLatitude(lat);
-                    GE.opts.latitude = lat;
-                }
-                if (lng) { 
-                    GE.view.setLongitude(lng);
-                    GE.opts.longitude = lng;
-                }
-                GE._updateView();
-            }
-            return this
-        },
+		getView: function() {
+			if (GE.opts.view_type == 'lookat'){
+				return GE.ge.getView().copyAsLookAt(GE.ge.ALTITUDE_RELATIVE_TO_GROUND);
+			}
+			return GE.ge.getView().copyAsCamera(GE.ge.ALTITUDE_RELATIVE_TO_GROUND);
+		},
+		
+		setPosition: function (lat, lng) {
+			if (!_initialized) return this;
+			if (lat || lng) {
+				if (lat) {
+					GE.view.setLatitude(lat);
+					GE.opts.latitude = lat;
+				}
+				if (lng) { 
+					GE.view.setLongitude(lng);
+					GE.opts.longitude = lng;
+				}
+				_updateView();
+			}
+			return this
+		},
         
-        setTilt: function (tilt) {
-			if (!GE._initialized) return this;
+		setTilt: function (tilt) {
+			if (!_initialized) return this;
 			GE.view.setTilt(tilt);
-			GE._updateView();
-            GE.opts.tilt = tilt;
+			_updateView();
+			GE.opts.tilt = tilt;
 			return this
 		},
 		
-        setHeading: function (heading) {
-			if (!GE._initialized) return this;
+		setHeading: function (heading) {
+			if (!_initialized) return this;
 			GE.view.setHeading(heading);
-            GE._updateView();
-            GE.opts.heading = heading;
+			_updateView();
+			GE.opts.heading = heading;
 			return this
 		},
         
-        setRange: function (range) {
-            if (!GE._initialized) return this;
-            if (GE.opts.view_type != 'lookat') {
-                console.log('Range is only available on \'lookat\' view');
-                return this;
-            }
-            GE.view.setRange(range);
-            GE._updateView();
-            GE.opts.range = range;
-            return this;
-        },
+		setRange: function (range) {
+			if (!_initialized) return this;
+			if (GE.opts.view_type != 'lookat') {
+				GE.debug && console.log('Range is only available on \'lookat\' view');
+				return this;
+			}
+			GE.view.setRange(range);
+			_updateView();
+			GE.opts.range = range;
+			return this;
+		},
         
-        setAltitude: function (altitude) {
-            if (!GE._initialized) return this;
-            if (GE.opts.view_type != 'view') {
-                console.log('Altitude is only available on \'view\' view');
-                return this;
-            }
-            GE.view.setAltitude(altitude);
-            GE._updateView();
-            GE.opts.altitude = altitude;
-            return this;
-        },
+		setAltitude: function (altitude) {
+			if (!_initialized) return this;
+			if (GE.opts.view_type != 'camera') {
+				GE.debug && console.log('Altitude is only available on \'camera\' view');
+				return this;
+			}
+			GE.view.setAltitude(altitude);
+			_updateView();
+			GE.opts.altitude = altitude;
+			return this;
+		},
 		
-        /*General methods*/
-        showSun: function () {
-			if (!GE._initialized) return this;
+		/*General methods*/
+		showSun: function () {
+			if (!_initialized) return this;
 			GE.opts.sun = true;
-			GE._updateView();
+			_updateView();
 			return this;
 		},
 		
-        hideSun: function () {
-			if (!GE._initialized) return this;
+		hideSun: function () {
+			if (!_initialized) return this;
 			GE.opts.sun = false;
-			GE._updateView();
+			_updateView();
 			return this;
 		},
 		
-        showControls: function () {
-			if (!GE._initialized) return this;
+		showControls: function () {
+			if (!_initialized) return this;
 			GE.opts.controls = true;
 			GE.ge.getNavigationControl().setVisibility(GE.opts.controls ? GE.ge.VISIBILITY_SHOW : GE.ge.VISIBILITY_HIDE);
 			return this;
 		},
 		
-        hideControls: function () {
-			if (!GE._initialized) return this;
+		hideControls: function () {
+			if (!_initialized) return this;
 			GE.opts.controls = false;
 			GE.ge.getNavigationControl().setVisibility(GE.opts.controls ? GE.ge.VISIBILITY_SHOW : GE.ge.VISIBILITY_HIDE);
 			return this;
 		},
         
-		_layer: function(name, visible) {
-            if (!GE._initialized) return this;
-			GE.ge.getLayerRoot().enableLayerById(name, visible);
-			return this;
+		enableBordersLayer     : function () {
+			return _layer(GE.ge.LAYER_BORDERS, true);
+		},
+		disableBordersLayer    : function () {
+			return _layer(GE.ge.LAYER_BORDERS, false);
+		},
+		enableRoadsLayer       : function () {
+			return _layer(GE.ge.LAYER_ROADS, true);
+		},
+		disableRoadsLayer      : function () {
+			return _layer(GE.ge.LAYER_ROADS, false);
+		},
+		enableBuildingsLayer   : function () {
+			return _layer(GE.ge.LAYER_BUILDINGS, true);
+		},
+		disableBuildingsLayer  : function () {
+			return _layer(GE.ge.LAYER_BUILDINGS, false);
+		},
+		enableTerrainLayer     : function () {
+			return _layer(GE.ge.LAYER_TERRAIN, true);
+		},
+		disableTerrainLayer    : function () {
+			return _layer(GE.ge.LAYER_TERRAIN, false);
 		},
         
-        enableBordersLayer     : function () { return GE._layer(GE.ge.LAYER_BORDERS, true); },
-		disableBordersLayer    : function () { return GE._layer(GE.ge.LAYER_BORDERS, false); },
-		enableRoadsLayer       : function () { return GE._layer(GE.ge.LAYER_ROADS, true); },
-		disableRoadsLayer      : function () { return GE._layer(GE.ge.LAYER_ROADS, false); },
-		enableBuildingsLayer   : function () { return GE._layer(GE.ge.LAYER_BUILDINGS, true); },
-		disableBuildingsLayer  : function () { return GE._layer(GE.ge.LAYER_BUILDINGS, false); },
-		enableTerrainLayer     : function () { return GE._layer(GE.ge.LAYER_TERRAIN, true); },
-		disableTerrainLayer    : function () { return GE._layer(GE.ge.LAYER_TERRAIN, false); }
-        
+		/**
+		 * Fetch a Kml from a given URL
+		 */
+		fetchKml: function(url, callback){
+			google.earth.fetchKml(GE.ge, url, function(kml){
+				if (kml) {
+					var kmlObject = new Object();
+					kmlObject.url = url;
+					kmlObject.kml = kml;
+					kmlObject.hide = function(){
+						GE.ge.getFeatures().removeChild(this.kml);
+					}
+					kmlObject.show = function() {
+						GE.ge.getFeatures().appendChild(this.kml);
+					}
+					GE.kmlObjects.push(kmlObject);
+					GE.debug && console.log('Loaded Kml object from ' + url);
+				} else {
+					GE.debug && console.log('Unable to load Kml object from \'' + url+'\'');
+				}
+				//send the kml object to the callback
+				if(callback) {
+					callback(kml);
+				}
+			});
+			return this;
+		},
+		
+		/**
+		 * Return an array with all the kml objects loaded, every kml object contains the following attributes:
+		 * url: The url of the kml object
+		 * kml: the kml itself
+		 * hide: (function) Hide the kml object from the current view
+		 * show: (function) Show the kml object in the current view
+		 */
+		getKmlObjects: function () {
+			return GE.kmlObjects;
+		},
+		
+		showKml: function(kml) {
+			GE.ge.getFeatures().appendChild(kml);
+		},
+		
+		hideKml: function (kml) {
+			GE.ge.getFeatures().removeChild(kml);
+		}
+		
 	});
     
 	// jQuery plugin initialization
@@ -234,4 +335,4 @@
 		return this;
 	};
 	
-}(window, document, jQuery));
+}(jQuery));
