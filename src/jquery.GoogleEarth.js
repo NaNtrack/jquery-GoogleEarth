@@ -90,9 +90,9 @@
 	};
 	
 	var _layer = function (name, visible) {
-			if (!_initialized) return this;
-			GE.ge.getLayerRoot().enableLayerById(name, visible);
-			return this;
+		if (!_initialized) return this;
+		GE.ge.getLayerRoot().enableLayerById(name, visible);
+		return GE;
 	};
 
 	var GE = $.GoogleEarth = function () {
@@ -170,7 +170,7 @@
 			return GE.ge.getView().copyAsCamera(GE.ge.ALTITUDE_RELATIVE_TO_GROUND);
 		},
 		
-		setPosition: function (lat, lng) {
+			setPosition: function (lat, lng) {
 			if (!_initialized) return this;
 			if (lat || lng) {
 				if (lat) {
