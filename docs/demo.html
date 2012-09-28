@@ -14,10 +14,13 @@
 				terrain: true, 
 				buildings: true,
 				borders: true,
-				onComplete: function () {
+				onComplete: function (instance) {
 					$.GoogleEarth.addViewListener('viewchangeend', function(){
 						console.log('This is the viewchangeend callback!: ' + $.GoogleEarth.getView().getLatitude());
 					});
+				},
+				onError: function (errorCode) {
+					console.log('Unable to load. ' + errorCode);
 				}
 			});
 		});

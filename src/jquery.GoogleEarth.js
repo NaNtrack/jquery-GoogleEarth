@@ -80,13 +80,16 @@
 			GE.opts.heading = view.getHeading();
 		});
 		if (GE.opts.onComplete) {
-			GE.opts.onComplete();
+			GE.opts.onComplete(instance);
 		}
 	};
 
-	var _pluginFailure = function (instance) {
+	var _pluginFailure = function (errorCode) {
 		GE.debug && console.log('Unable to initialize Google Earth Plugin!');
 		_initialized = false;
+		if (GE.opts.onError) {
+			GE.opts.onError(errorCode);
+		}
 	};
         
 	var _updateView = function () {
@@ -164,6 +167,7 @@
 		},
 		
 		getView: function() {
+			if (!_initialized) return null;
 			if (GE.opts.view_type == 'lookat'){
 				return ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
 			}
@@ -284,6 +288,7 @@
 		 * Fetch a Kml from a given URL
 		 */
 		fetchKml: function(url, callback){
+			if (!_initialized) return this;
 			google.earth.fetchKml(GE.ge, url, function(kml){
 				if (kml) {
 					var kmlObject = new Object();
