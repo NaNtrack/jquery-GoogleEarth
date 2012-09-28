@@ -54,10 +54,10 @@
 		_initialized = true;
 		ge.getWindow().setVisibility(true);
 		ge.getNavigationControl().setVisibility(GE.opts.controls ? ge.VISIBILITY_SHOW : ge.VISIBILITY_HIDE);
-		_layer(ge.LAYER_BORDERS, GE.opts.layer_borders);
-		_layer(ge.LAYER_ROADS, GE.opts.layer_roads);
-		_layer(ge.LAYER_BUILDINGS, GE.opts.layer_buildings);
-		_layer(ge.LAYER_TERRAIN, GE.opts.layer_terrain);
+		_layer(ge.LAYER_BORDERS, GE.opts.borders);
+		_layer(ge.LAYER_ROADS, GE.opts.roads);
+		_layer(ge.LAYER_BUILDINGS, GE.opts.buildings);
+		_layer(ge.LAYER_TERRAIN, GE.opts.terrain);
 		ge.getSun().setVisibility(GE.opts.sun);
 		GE.setViewType(GE.opts.view_type);
 		if (GE.opts.latitude || GE.opts.longitude) GE.setPosition(GE.opts.latitude, GE.opts.longitude);
@@ -79,7 +79,9 @@
 			GE.opts.tilt = view.getTilt();
 			GE.opts.heading = view.getHeading();
 		});
-		if (GE.opts.viewListener && GE.opts.viewEvent) GE.addViewListener(GE.opts.viewEvent, GE.opts.viewListener);
+		if (GE.opts.onComplete) {
+			GE.opts.onComplete();
+		}
 	};
 
 	var _pluginFailure = function (instance) {
@@ -107,22 +109,21 @@
 		
 		//Default options
 		defaults : { 
-			id              : null,
-			layer_borders   : false,  
-			layer_roads     : false,
-			layer_buildings : false,
-			layer_terrain   : false,
-			sun             : false,
-			controls        : true,
-			view_type       : 'lookat',
-			latitude        : null,
-			longitude       : null,
-			tilt            : null,
-			heading         : null,
-			range           : null,
-			altitude        : null,
-			viewEvent       : null,
-			viewListener    : null
+			id         : null,
+			borders    : false,  
+			roads      : false,
+			buildings  : false,
+			terrain    : false,
+			sun        : false,
+			controls   : true,
+			view_type  : 'lookat',
+			latitude   : null,
+			longitude  : null,
+			tilt       : null,
+			heading    : null,
+			range      : null,
+			altitude   : null,
+			onComplete : null
 		},
         
 		//Debug: true or false

@@ -10,9 +10,14 @@
 			$.GoogleEarth({
 				id: 'map',
 				sun: false,
-				viewEvent: 'viewchangeend',
-				viewListener: function(){
-					console.log('This is the viewchangeend callback!: ' + $.GoogleEarth.getView().getLatitude());
+				controls: true,
+				terrain: true, 
+				buildings: true,
+				borders: true,
+				onComplete: function () {
+					$.GoogleEarth.addViewListener('viewchangeend', function(){
+						console.log('This is the viewchangeend callback!: ' + $.GoogleEarth.getView().getLatitude());
+					});
 				}
 			});
 		});
