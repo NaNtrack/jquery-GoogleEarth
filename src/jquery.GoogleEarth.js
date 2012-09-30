@@ -289,7 +289,7 @@
 		 */
 		fetchKml: function(url, callback){
 			if (!_initialized) return this;
-			google.earth.fetchKml(GE.ge, url, function(kml){
+			google.earth.fetchKml(ge, url, function(kml){
 				if (kml) {
 					var kmlObject = new Object();
 					kmlObject.url = url;
@@ -325,11 +325,120 @@
 		},
 		
 		showKml: function(kml) {
+			if (!_initialized) return this;
 			ge.getFeatures().appendChild(kml);
+			return this;
 		},
 		
 		hideKml: function (kml) {
+			if (!_initialized) return this;
 			ge.getFeatures().removeChild(kml);
+			return this;
+		},
+                
+		setFlyToSpeed: function (speed) {
+			if (!_initialized) return this;
+			ge.getOptions().setFlyToSpeed(speed);
+			return this;
+		},
+                
+		addPlacemark: function (options) {
+			if (!_initialized) return this;
+			var defaults = {
+				latitude    : 0,
+				longitude   : 0,
+				altitude    : 0,
+				icon        : '', 
+				description : '',
+				onclick     : false
+			};
+			
+			options = $.extend(defaults, options);
+			
+			var placemark   = ge.createPlacemark('');
+			var point       = ge.createPoint('');
+			var icon        = ge.createIcon('');
+			var style       = ge.createStyle('');
+
+			point.setLatitude(parseFloat(options.latitude));
+			point.setLongitude(parseFloat(options.longitude));
+			point.setAltitudeMode(ge.ALTITUDE_RELATIVE_TO_GROUND);
+			point.setAltitude(parseFloat(options.altitude));
+			point.setExtrude(true);
+
+			placemark.setGeometry(point);
+			icon.setHref(options.icon);
+			style.getIconStyle().setIcon(icon);
+			placemark.setStyleSelector(style);
+			ge.getFeatures().appendChild(placemark);
+			if (options.description.length > 0 ) {
+				google.earth.addEventListener(
+					placemark,
+					'click',
+					function(event){
+						event.preventDefault();
+						var balloon = ge.createHtmlStringBalloon('');
+						balloon.setFeature(event.getTarget());
+						balloon.setMaxWidth(340);
+						balloon.setContentString(options.description);
+						ge.setBalloon(balloon);
+					}
+				);
+			}
+			if (options.onclick) {
+				google.earth.addEventListener(
+					placemark,
+					'click',
+					function(event) {
+						options.onclick(event);
+					}
+				);
+			}
+			return placemark;
+		},
+		
+		updatePlacemark : function(placemark, options){
+			if (!_initialized) return this;
+			var defaults = {
+				latitude    : 0,
+				longitude   : 0,
+				altitude    : 0
+			};
+			options = $.extend(defaults, options);
+			var point = ge.createPoint('');
+			point.setLatitude(parseFloat(options.latitude));
+			point.setLongitude(parseFloat(options.longitude));
+			point.setAltitudeMode(ge.ALTITUDE_RELATIVE_TO_GROUND);
+			point.setAltitude(parseFloat(options.altitude));
+			point.setExtrude(true);
+			placemark.setGeometry(point);
+			return placemark;
+		},
+		
+		getStreamingPercent: function () {
+			if (!_initialized) return 0;
+			return ge.getStreamingPercent();
+		},
+		
+		startAnimation: function (animation_url, onStart) {
+			if (!_initialized) return this;
+			this.fetchKml(animation_url, function(kml){
+				if(kml){
+					$.GoogleEarth.showKml(kml);
+					ge.getTourPlayer().setTour(kml);
+					ge.getTourPlayer().play();
+					if (onStart) {
+						onStart(ge.getTourPlayer());
+					}
+				}
+			});
+			return this;
+		},
+		
+		stopAnimation: function () {
+			if (!_initialized) return this;
+			ge.getTourPlayer().stop();
+			return this;
 		}
 		
 	});
