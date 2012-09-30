@@ -51,6 +51,7 @@
 	
 	var _pluginInit = function (instance) {
 		ge = instance;
+		GE.ge = ge;
 		_initialized = true;
 		ge.getWindow().setVisibility(true);
 		ge.getNavigationControl().setVisibility(GE.opts.controls ? ge.VISIBILITY_SHOW : ge.VISIBILITY_HIDE);
@@ -65,7 +66,7 @@
 		if (GE.opts.heading) GE.setHeading(GE.opts.heading);
 		if (GE.opts.range) GE.setRange(GE.opts.range);
 		if (GE.opts.altitude) GE.setAltitude(GE.opts.altitude);
-		GE.addViewListener('viewchangeend', function(){
+		GE.addListener(ge.getView(), 'viewchangeend', function(){
 			var view = GE.getView();
 			if(GE.opts.view_type == 'lookat') {
 				GE.opts.range = view.getRange();
@@ -126,7 +127,8 @@
 			heading    : null,
 			range      : null,
 			altitude   : null,
-			onComplete : null
+			onComplete : null,
+			onError    : null
 		},
         
 		//Debug: true or false
@@ -139,12 +141,12 @@
 		kmlObjects: [],
 		
 		/*Listeners*/
-		addViewListener: function (event, callback) {
-			google.earth.addEventListener(ge.getView(), event, callback);
+		addListener: function (obj, event, callback) {
+			google.earth.addEventListener(obj, event, callback);
 		},
 		
-		removeViewListener: function(event, callback) {
-			google.earth.removeEventListener(ge.getView(),event, callback);
+		removeListener: function(obj, event, callback) {
+			google.earth.removeEventListener(obj, event, callback);
 		},
         
 		/*View methods*/
@@ -177,6 +179,7 @@
 		setPosition: function (lat, lng) {
 			if (!_initialized) return this;
 			if (lat || lng) {
+				GE.view = this.getView();
 				if (lat) {
 					GE.view.setLatitude(lat);
 					GE.opts.latitude = lat;
@@ -192,6 +195,7 @@
         
 		setTilt: function (tilt) {
 			if (!_initialized) return this;
+			GE.view = this.getView();
 			GE.view.setTilt(tilt);
 			_updateView();
 			GE.opts.tilt = tilt;
@@ -200,6 +204,7 @@
 		
 		setHeading: function (heading) {
 			if (!_initialized) return this;
+			GE.view = this.getView();
 			GE.view.setHeading(heading);
 			_updateView();
 			GE.opts.heading = heading;
@@ -212,6 +217,7 @@
 				GE.debug && console.log('Range is only available on \'lookat\' view');
 				return this;
 			}
+			GE.view = this.getView();
 			GE.view.setRange(range);
 			_updateView();
 			GE.opts.range = range;
@@ -224,6 +230,7 @@
 				GE.debug && console.log('Altitude is only available on \'camera\' view');
 				return this;
 			}
+			GE.view = this.getView();
 			GE.view.setAltitude(altitude);
 			_updateView();
 			GE.opts.altitude = altitude;

@@ -1,9 +1,11 @@
 <html>
 <head>
 	<title>jQuery-GoogleEarth Demo</title>
+	<link href="css/bootstrap.min.css" rel="stylesheet">
 	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
 	<script type="text/javascript" src="http://www.google.com/jsapi"></script>
 	<script type="text/javascript" src="../src/jquery.GoogleEarth.js"></script>
+	<script src="js/bootstrap.min.js"></script>
 	<script type="text/javascript">
 		google.load("earth","1");
 		$(document).ready(function(){
@@ -11,22 +13,192 @@
 				id: 'map',
 				sun: false,
 				controls: true,
-				terrain: true, 
-				buildings: true,
-				borders: true,
+				terrain: false, 
+				buildings: false,
+				borders: false,
+				roads: false,
 				onComplete: function (instance) {
-					$.GoogleEarth.addViewListener('viewchangeend', function(){
-						console.log('This is the viewchangeend callback!: ' + $.GoogleEarth.getView().getLatitude());
-					});
+					console.log('Google Earth loaded');
 				},
 				onError: function (errorCode) {
 					console.log('Unable to load. ' + errorCode);
 				}
 			});
+			
+			$('#sidebar').affix()
 		});
+		
+		function test(el) {
+			eval(el.parent().parent().find('pre').text());
+			return false;
+		}
 	</script>
+	<style>
+		#map{position:fixed;}
+		#container{padding-top:300px;}
+	</style>
 </head>
 <body>
-	<div id="map" style="width:100%;height:500px;"></div>
+	<div class="container">
+		<div id="map" style="width:1200px;height:300px;"></div>
+	</div>
+	<div id="container" class="container">
+		<h1>$.GoogleEarth usage</h1>
+		<div class="span12">
+			<section id="layers">
+				<h3><b>Layers</b></h3>
+				<p>You can choose between a different numbers of layers to load at the initialization, example</p>
+				<pre>
+$.GoogleEarth({
+	id: 'map',
+	borders: true,
+	terrain: true, 
+	buildings: true,
+	roads: false
+});
+</pre>
+				<p>But you can also load and unload some layers after the Google Earth plugin is loaded, example</p>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.enableBordersLayer();</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.disableBordersLayer();</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.enableTerrainLayer();</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.disableTerrainLayer();</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.enableBuildingsLayer();</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.disableBuildingsLayer();</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.enableRoadsLayer();</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.disableRoadsLayer();</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+			</section>
+			<section id="view">
+				<h3><b>View</b></h3>
+				<p>You can choose between two types of view: <b>camera</b> and <b>lookat</b>, example</p>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.setViewType('camera');</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.setViewType('lookat');</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<p>To get a copy of the current view use the following code</p>
+				<div class="row">
+					<div class="span10"><pre>
+var view = $.GoogleEarth.getView();
+console.log(view.getTilt());						
+</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				
+				<h4><b>Positioning</b></h4> 
+				<p>you can set a position using the $.GoogleEarth.setPosition([lat],[lon]) method, example</p>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.setPosition(-33.4789, -70.60);</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.setPosition(15, null);</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.setPosition(null, 40);</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<h4><b>Tilt</b></h4>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.setTilt(45);</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<h4><b>Heading</b></h4>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.setHeading(2);</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<h4><b>Altitude</b></h4>
+				<p><span class="badge badge-warning">Heads-up</span> only available when the view type is <b>camera</b></p>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.setAltitude(2000);</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				<h4><b>Range</b></h4>
+				<p><span class="badge badge-warning">Heads-up</span> only available when the view type is <b>lookat</b></p>
+				<div class="row">
+					<div class="span10"><pre>$.GoogleEarth.setRange(2000);</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+			</section>
+			<section id="view">
+				<h3><b>Callbacks</b></h3>
+				<p>There is two available callbacks</p>
+				<h4>onComplete</h4>	
+				<p>available when the Google Earth Plugin is installed and the load is complete</p>
+				<div class="row">
+					<div class="span12"><pre>
+$.GoogleEarth({
+	id: 'map',
+	onComplete: function(GEInstance) {
+		console.log('The instance is loaded');
+		//Add listeners, change view, load kml files, add placemarks, etc
+	}
+});
+</pre></div>
+				</div>
+				<h4>onError</h4>	
+				<p>available if the Google Earth Plugin is not installed or something went wrong</p>
+				<div class="row">
+					<div class="span10"><pre>
+$.GoogleEarth({
+	id: 'map',
+	onError: function(message) {
+		alert('Oops!, error_code: ' + message);
+	}
+});
+</pre></div>
+				</div>
+			</section>
+			<section id="listeners">
+				<h3><b>Listeners</b></h3>
+				<p>To add some view listeners see the following examples example</p>
+				<div class="row">
+					<div class="span10">
+						<pre>
+function theFunctionName() {
+	var view = $.GoogleEarth.getView();
+	console.log('lat: ' + view.getLatitude() + ', lon: ' + view.getLongitude() );
+}
+$.GoogleEarth.addListener($.GoogleEarth.ge.getView(), 'viewchangeend', theFunctionName);</pre></div>
+					<div class="span2"><button class="btn btn-large btn-success pull-right" onclick="return test($(this));">Test this code</button></div>
+				</div>
+				
+				<p>To remove a view listener use the following code</p>
+				<div class="row">
+					<div class="span10">
+						<pre>$.GoogleEarth.removeListener($.GoogleEarth.ge.getView(), 'viewchangeend', theFunctionName);</pre>
+					</div>
+				</div>
+			</section>
+		</div>
+	</div>
 </body>
 </html>
