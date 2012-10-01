@@ -456,6 +456,27 @@
 			if (!_initialized) return this;
 			ge.getTourPlayer().stop();
 			return this;
+		},
+
+		isInstalled: function () {
+			return google.earth.isInstalled();
+		}, 
+		
+		isSupported : function () {
+			return google.earth.isSupported();
+		},
+		
+		toString : function () {
+			return "{version: '" + GE.version +"', " + 
+				"type: '" + GE.opts.type + "', " +
+				"latitude: " + GE.opts.latitude + ", " +
+				"longitude: " + GE.opts.longitude + ", " +
+				"altitude: " + GE.opts.altitude + ", " +
+				"range: " + GE.opts.range + ", " +
+				"heading: " + GE.opts.heading + ", " +
+				"tilt: " + GE.opts.tilt + "}"
+			
+			;
 		}
 		
 	});
