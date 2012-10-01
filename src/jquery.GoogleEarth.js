@@ -62,7 +62,7 @@
 		_layer(ge.LAYER_BUILDINGS, GE.opts.buildings);
 		_layer(ge.LAYER_TERRAIN, GE.opts.terrain);
 		ge.getSun().setVisibility(GE.opts.sun);
-		GE.setViewType(GE.opts.view_type);
+		GE.setViewType(GE.opts.type);
 		if (GE.opts.latitude || GE.opts.longitude) GE.setPosition(GE.opts.latitude, GE.opts.longitude);
 		if (GE.opts.tilt) GE.setTilt(GE.opts.tilt);
 		if (GE.opts.heading) GE.setHeading(GE.opts.heading);
@@ -70,7 +70,7 @@
 		if (GE.opts.altitude) GE.setAltitude(GE.opts.altitude);
 		GE.addListener(ge.getView(), 'viewchangeend', function(){
 			var view = GE.getView();
-			if(GE.opts.view_type == 'lookat') {
+			if(GE.opts.type == 'lookat') {
 				GE.opts.range = view.getRange();
 				GE.opts.altitude = null;
 			} else {
@@ -95,10 +95,6 @@
 		}
 	};
         
-	var _updateView = function () {
-		ge.getView().setAbstractView(GE.view);
-	};
-	
 	var _layer = function (name, visible) {
 		if (!_initialized) return this;
 		ge.getLayerRoot().enableLayerById(name, visible);
@@ -122,7 +118,7 @@
 			terrain    : false,
 			sun        : false,
 			controls   : true,
-			view_type  : 'lookat',
+			type  : 'lookat',
 			latitude   : null,
 			longitude  : null,
 			tilt       : null,
@@ -154,14 +150,14 @@
 		/*View methods*/
 		setViewType: function(viewType) {
 			if (viewType == 'lookat'){
-				if (GE.opts.view_type != 'lookat' || GE.view === null) {
+				if (GE.opts.type != 'lookat' || GE.view === null) {
 					GE.view = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
-					GE.opts.view_type = 'lookat';
+					GE.opts.type = 'lookat';
 				}
 			} else if(viewType == 'camera') {
-				if (GE.opts.view_type != 'camera' || GE.view === null) {
+				if (GE.opts.type != 'camera' || GE.view === null) {
 					GE.view = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
-					GE.opts.view_type = 'camera';    
+					GE.opts.type = 'camera';    
 				}
 			} else {
 				GE.debug && console.log('Invalid view type, please use \'lookat\' or \'camera\'');
@@ -189,13 +185,13 @@
 			GE.view.setRange(parseFloat(options.range));
 			GE.view.setHeading(parseFloat(options.heading));
 			GE.view.setTilt(parseFloat(options.tilt));
-			_updateView();
+			ge.getView().setAbstractView(GE.view);
 			return this;
 		},
 		
 		getView: function() {
 			if (!_initialized) return null;
-			if (GE.opts.view_type == 'lookat'){
+			if (GE.opts.type == 'lookat'){
 				return ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
 			}
 			return ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
@@ -204,85 +200,50 @@
 		setPosition: function (lat, lng) {
 			if (!_initialized) return this;
 			if (lat || lng) {
-				GE.view = this.getView();
 				if (lat) {
-					GE.view.setLatitude(lat);
 					GE.opts.latitude = lat;
 				}
 				if (lng) { 
-					GE.view.setLongitude(lng);
 					GE.opts.longitude = lng;
 				}
-				_updateView();
+				GE.setView(GE.opts);
 			}
 			return this
 		},
         
 		setTilt: function (tilt) {
 			if (!_initialized) return this;
-			GE.view = this.getView();
-			GE.view.setTilt(tilt);
-			GE.view.setLatitude(GE.opts.latitude);
-			GE.view.setLongitude(GE.opts.longitude);
-			if (GE.opts.view_type != 'lookat') {
-				GE.view.setRange(GE.opts.range);
-			} else {
-				GE.view.setAltitude(GE.opts.altitude);
-			}
-			GE.view.setHeading(GE.opts.heading);
 			GE.opts.tilt = tilt;
-			_updateView();
+			GE.setView(GE.opts);
 			return this
 		},
 		
 		setHeading: function (heading) {
 			if (!_initialized) return this;
-			GE.view = this.getView();
-			GE.view.setHeading(heading);
-			GE.view.setLatitude(GE.opts.latitude);
-			GE.view.setLongitude(GE.opts.longitude);
-			GE.view.setTilt(GE.opts.tilt);
-			if (GE.opts.view_type != 'lookat') {
-				GE.view.setRange(GE.opts.range);
-			} else {
-				GE.view.setAltitude(GE.opts.altitude);
-			}
 			GE.opts.heading = heading;
-			_updateView();
+			GE.setView(GE.opts);
 			return this
 		},
         
 		setRange: function (range) {
 			if (!_initialized) return this;
-			if (GE.opts.view_type != 'lookat') {
+			if (GE.opts.type != 'lookat') {
 				GE.debug && console.log('Range is only available on \'lookat\' view');
 				return this;
 			}
-			GE.view = this.getView();
-			GE.view.setRange(range);
-			GE.view.setLatitude(GE.opts.latitude);
-			GE.view.setLongitude(GE.opts.longitude);
-			GE.view.setHeading(GE.opts.heading);
-			GE.view.setTilt(GE.opts.tilt);
 			GE.opts.range = range;
-			_updateView();
+			GE.setView(GE.opts);
 			return this;
 		},
         
 		setAltitude: function (altitude) {
 			if (!_initialized) return this;
-			if (GE.opts.view_type != 'camera') {
+			if (GE.opts.type != 'camera') {
 				GE.debug && console.log('Altitude is only available on \'camera\' view');
 				return this;
 			}
-			GE.view = this.getView();
-			GE.view.setAltitude(altitude);
-			GE.view.setLatitude(GE.opts.latitude);
-			GE.view.setLongitude(GE.opts.longitude);
-			GE.view.setHeading(GE.opts.heading);
-			GE.view.setTilt(GE.opts.tilt);
 			GE.opts.altitude = altitude;
-			_updateView();
+			GE.setView(GE.opts);
 			return this;
 		},
 		
