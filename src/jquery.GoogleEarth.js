@@ -42,11 +42,13 @@
 			GE.debug && console.log('You need to specify an id for the place holder');
 			return;
 		}
-		google.setOnLoadCallback(function(){
-			if(!_initialized) {
+		if(!_initialized) {
+			google.setOnLoadCallback(function(){
 				google.earth.createInstance(GE.opts.id, _pluginInit, _pluginFailure);
-			}
-		});
+			});
+		} else {
+			google.earth.createInstance(GE.opts.id, _pluginInit, _pluginFailure);
+		}
 	};
 	
 	var _pluginInit = function (instance) {
@@ -132,7 +134,7 @@
 		},
         
 		//Debug: true or false
-		debug: true,
+		debug: false,
 		
 		//View
 		view : null,
@@ -168,6 +170,29 @@
 			return this;
 		},
 		
+		setView: function (options) {
+			var defaults = {
+				type      : 'lookat',
+				latitude  : 0,
+				longitude : 0,
+				altitude  : 0,
+				range     : 0,
+				heading   : 0,
+				tilt      : 0
+			}
+			options = $.extend( defaults, options);
+			GE.setViewType(options.type);
+			GE.view = GE.getView();
+			GE.view.setLatitude(parseFloat(options.latitude));
+			GE.view.setLongitude(parseFloat(options.longitude));
+			GE.view.setAltitude(parseFloat(options.altitude));
+			GE.view.setRange(parseFloat(options.range));
+			GE.view.setHeading(parseFloat(options.heading));
+			GE.view.setTilt(parseFloat(options.tilt));
+			_updateView();
+			return this;
+		},
+		
 		getView: function() {
 			if (!_initialized) return null;
 			if (GE.opts.view_type == 'lookat'){
@@ -197,8 +222,16 @@
 			if (!_initialized) return this;
 			GE.view = this.getView();
 			GE.view.setTilt(tilt);
-			_updateView();
+			GE.view.setLatitude(GE.opts.latitude);
+			GE.view.setLongitude(GE.opts.longitude);
+			if (GE.opts.view_type != 'lookat') {
+				GE.view.setRange(GE.opts.range);
+			} else {
+				GE.view.setAltitude(GE.opts.altitude);
+			}
+			GE.view.setHeading(GE.opts.heading);
 			GE.opts.tilt = tilt;
+			_updateView();
 			return this
 		},
 		
@@ -206,8 +239,16 @@
 			if (!_initialized) return this;
 			GE.view = this.getView();
 			GE.view.setHeading(heading);
-			_updateView();
+			GE.view.setLatitude(GE.opts.latitude);
+			GE.view.setLongitude(GE.opts.longitude);
+			GE.view.setTilt(GE.opts.tilt);
+			if (GE.opts.view_type != 'lookat') {
+				GE.view.setRange(GE.opts.range);
+			} else {
+				GE.view.setAltitude(GE.opts.altitude);
+			}
 			GE.opts.heading = heading;
+			_updateView();
 			return this
 		},
         
@@ -219,8 +260,12 @@
 			}
 			GE.view = this.getView();
 			GE.view.setRange(range);
-			_updateView();
+			GE.view.setLatitude(GE.opts.latitude);
+			GE.view.setLongitude(GE.opts.longitude);
+			GE.view.setHeading(GE.opts.heading);
+			GE.view.setTilt(GE.opts.tilt);
 			GE.opts.range = range;
+			_updateView();
 			return this;
 		},
         
@@ -232,8 +277,12 @@
 			}
 			GE.view = this.getView();
 			GE.view.setAltitude(altitude);
-			_updateView();
+			GE.view.setLatitude(GE.opts.latitude);
+			GE.view.setLongitude(GE.opts.longitude);
+			GE.view.setHeading(GE.opts.heading);
+			GE.view.setTilt(GE.opts.tilt);
 			GE.opts.altitude = altitude;
+			_updateView();
 			return this;
 		},
 		
@@ -241,14 +290,14 @@
 		showSun: function () {
 			if (!_initialized) return this;
 			GE.opts.sun = true;
-			_updateView();
+			ge.getSun().setVisibility(GE.opts.sun);
 			return this;
 		},
 		
 		hideSun: function () {
 			if (!_initialized) return this;
 			GE.opts.sun = false;
-			_updateView();
+			ge.getSun().setVisibility(GE.opts.sun);
 			return this;
 		},
 		
