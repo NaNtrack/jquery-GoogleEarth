@@ -28,6 +28,9 @@
  */
 (function ($, undefined) {
 	"use strict";
+	
+	//Debug: true or false
+	debug: false;
 
 	//Google Earth instance
 	var ge = null;
@@ -39,16 +42,10 @@
 		// Extend the defaults
 		GE.opts = $.extend(true, {}, GE.defaults, opts);
 		if (GE.opts.id === null) {
-			GE.debug && console.log('You need to specify an id for the place holder');
+			debug && console.log('You need to specify an id for the place holder');
 			return;
 		}
-		if(!_initialized) {
-			google.setOnLoadCallback(function(){
-				google.earth.createInstance(GE.opts.id, _pluginInit, _pluginFailure);
-			});
-		} else {
-			google.earth.createInstance(GE.opts.id, _pluginInit, _pluginFailure);
-		}
+		google.earth.createInstance(GE.opts.id, _pluginInit, _pluginFailure);
 	};
 	
 	var _pluginInit = function (instance) {
@@ -88,7 +85,7 @@
 	};
 
 	var _pluginFailure = function (errorCode) {
-		GE.debug && console.log('Unable to initialize Google Earth Plugin!');
+		debug && console.log('Unable to initialize Google Earth Plugin!');
 		_initialized = false;
 		if (GE.opts.onError) {
 			GE.opts.onError(errorCode);
@@ -118,7 +115,7 @@
 			terrain    : false,
 			sun        : false,
 			controls   : true,
-			type  : 'lookat',
+			type       : 'lookat',
 			latitude   : null,
 			longitude  : null,
 			tilt       : null,
@@ -129,9 +126,6 @@
 			onError    : null
 		},
         
-		//Debug: true or false
-		debug: false,
-		
 		//View
 		view : null,
 		
@@ -141,10 +135,12 @@
 		/*Listeners*/
 		addListener: function (obj, event, callback) {
 			google.earth.addEventListener(obj, event, callback);
+			debug && console.log('Added ' + event + ' listener');
 		},
 		
 		removeListener: function(obj, event, callback) {
 			google.earth.removeEventListener(obj, event, callback);
+			debug && console.log('Removed ' + event + ' listener');
 		},
         
 		/*View methods*/
@@ -160,7 +156,7 @@
 					GE.opts.type = 'camera';    
 				}
 			} else {
-				GE.debug && console.log('Invalid view type, please use \'lookat\' or \'camera\'');
+				debug && console.log('Invalid view type, please use \'lookat\' or \'camera\'');
 				GE.setViewType('lookat');
 			}
 			return this;
@@ -181,8 +177,8 @@
 			GE.view = GE.getView();
 			GE.view.setLatitude(parseFloat(options.latitude));
 			GE.view.setLongitude(parseFloat(options.longitude));
-			try{GE.view.setAltitude(parseFloat(options.altitude));}catch(e){}
-			try{GE.view.setRange(parseFloat(options.range));}catch(e){}
+			try{GE.view.setAltitude(parseFloat(options.altitude));}catch(e){console.log(e);}
+			try{GE.view.setRange(parseFloat(options.range));}catch(e){console.log(e);}
 			GE.view.setHeading(parseFloat(options.heading));
 			GE.view.setTilt(parseFloat(options.tilt));
 			ge.getView().setAbstractView(GE.view);
@@ -228,7 +224,7 @@
 		setRange: function (range) {
 			if (!_initialized) return this;
 			if (GE.opts.type != 'lookat') {
-				GE.debug && console.log('Range is only available on \'lookat\' view');
+				debug && console.log('Range is only available on \'lookat\' view');
 				return this;
 			}
 			GE.opts.range = range;
@@ -238,10 +234,6 @@
         
 		setAltitude: function (altitude) {
 			if (!_initialized) return this;
-			if (GE.opts.type != 'camera') {
-				GE.debug && console.log('Altitude is only available on \'camera\' view');
-				return this;
-			}
 			GE.opts.altitude = altitude;
 			GE.setView(GE.opts);
 			return this;
@@ -319,9 +311,9 @@
 					}
 					GE.kmlObjects.push(kmlObject);
 					GE.showKml(kml);
-					GE.debug && console.log('Loaded Kml object from ' + url);
+					debug && console.log('Loaded Kml object from ' + url);
 				} else {
-					GE.debug && console.log('Unable to load Kml object from \'' + url+'\'');
+					debug && console.log('Unable to load Kml object from \'' + url+'\'');
 				}
 				//send the kml object to the callback
 				if(callback) {
