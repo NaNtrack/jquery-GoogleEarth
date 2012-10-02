@@ -318,6 +318,7 @@
 						ge.getFeatures().appendChild(this.kml);
 					}
 					GE.kmlObjects.push(kmlObject);
+					GE.showKml(kml);
 					GE.debug && console.log('Loaded Kml object from ' + url);
 				} else {
 					GE.debug && console.log('Unable to load Kml object from \'' + url+'\'');
@@ -441,7 +442,6 @@
 			if (!_initialized) return this;
 			this.fetchKml(animation_url, function(kml){
 				if(kml){
-					$.GoogleEarth.showKml(kml);
 					ge.getTourPlayer().setTour(kml);
 					ge.getTourPlayer().play();
 					if (onStart) {
