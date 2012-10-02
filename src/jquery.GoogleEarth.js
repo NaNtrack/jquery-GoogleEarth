@@ -169,20 +169,20 @@
 		setView: function (options) {
 			var defaults = {
 				type      : 'lookat',
-				latitude  : 0,
-				longitude : 0,
-				altitude  : 0,
-				range     : 0,
-				heading   : 0,
-				tilt      : 0
+				latitude  : GE.opts.latitude,
+				longitude : GE.opts.longitude,
+				altitude  : GE.opts.altitude,
+				range     : GE.opts.range,
+				heading   : GE.opts.heading,
+				tilt      : GE.opts.tilt
 			}
 			options = $.extend( defaults, options);
 			GE.setViewType(options.type);
 			GE.view = GE.getView();
 			GE.view.setLatitude(parseFloat(options.latitude));
 			GE.view.setLongitude(parseFloat(options.longitude));
-			GE.view.setAltitude(parseFloat(options.altitude));
-			GE.view.setRange(parseFloat(options.range));
+			try{GE.view.setAltitude(parseFloat(options.altitude));}catch(e){}
+			try{GE.view.setRange(parseFloat(options.range));}catch(e){}
 			GE.view.setHeading(parseFloat(options.heading));
 			GE.view.setTilt(parseFloat(options.tilt));
 			ge.getView().setAbstractView(GE.view);
