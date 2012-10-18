@@ -29,9 +29,6 @@
 (function ($, undefined) {
 	"use strict";
 	
-	//Debug: true or false
-	debug: false;
-
 	//Google Earth instance
 	var ge = null;
 	
@@ -42,7 +39,7 @@
 		// Extend the defaults
 		GE.opts = $.extend(true, {}, GE.defaults, opts);
 		if (GE.opts.id === null) {
-			debug && console.log('You need to specify an id for the place holder');
+			GE.debug && console.log('You need to specify an id for the place holder');
 			return;
 		}
 		google.earth.createInstance(GE.opts.id, _pluginInit, _pluginFailure);
@@ -65,6 +62,7 @@
 		if (GE.opts.heading) GE.setHeading(GE.opts.heading);
 		if (GE.opts.range) GE.setRange(GE.opts.range);
 		if (GE.opts.altitude) GE.setAltitude(GE.opts.altitude);
+		if (GE.opts.roll) GE.setRoll(GE.opts.roll);
 		GE.addListener(ge.getView(), 'viewchangeend', function(){
 			var view = GE.getView();
 			if(GE.opts.type == 'lookat') {
@@ -85,7 +83,7 @@
 	};
 
 	var _pluginFailure = function (errorCode) {
-		debug && console.log('Unable to initialize Google Earth Plugin!');
+		GE.debug && console.log('Unable to initialize Google Earth Plugin!');
 		_initialized = false;
 		if (GE.opts.onError) {
 			GE.opts.onError(errorCode);
@@ -121,11 +119,15 @@
 			tilt       : null,
 			heading    : null,
 			range      : null,
+			roll       : null,
 			altitude   : null,
 			onComplete : null,
 			onError    : null
 		},
         
+		//Debug: true or false
+		debug : false,
+		
 		//View
 		view : null,
 		
@@ -135,12 +137,12 @@
 		/*Listeners*/
 		addListener: function (obj, event, callback) {
 			google.earth.addEventListener(obj, event, callback);
-			debug && console.log('Added ' + event + ' listener');
+			GE.debug && console.log('Added ' + event + ' listener');
 		},
 		
 		removeListener: function(obj, event, callback) {
 			google.earth.removeEventListener(obj, event, callback);
-			debug && console.log('Removed ' + event + ' listener');
+			GE.debug && console.log('Removed ' + event + ' listener');
 		},
         
 		/*View methods*/
@@ -156,7 +158,7 @@
 					GE.opts.type = 'camera';    
 				}
 			} else {
-				debug && console.log('Invalid view type, please use \'lookat\' or \'camera\'');
+				GE.debug && console.log('Invalid view type, please use \'lookat\' or \'camera\'');
 				GE.setViewType('lookat');
 			}
 			return this;
@@ -177,10 +179,11 @@
 			GE.view = GE.getView();
 			GE.view.setLatitude(parseFloat(options.latitude));
 			GE.view.setLongitude(parseFloat(options.longitude));
-			try{GE.view.setAltitude(parseFloat(options.altitude));}catch(e){console.log(e);}
-			try{GE.view.setRange(parseFloat(options.range));}catch(e){console.log(e);}
+			try{GE.view.setAltitude(parseFloat(options.altitude));}catch(e){GE.debug && console.log(e);}
+			try{GE.view.setRange(parseFloat(options.range));}catch(e){GE.debug && console.log(e);}
 			GE.view.setHeading(parseFloat(options.heading));
 			GE.view.setTilt(parseFloat(options.tilt));
+			try{GE.view.setRoll(parseFloat(options.roll));}catch(e){GE.debug && console.log(e);}
 			ge.getView().setAbstractView(GE.view);
 			return this;
 		},
@@ -224,7 +227,7 @@
 		setRange: function (range) {
 			if (!_initialized) return this;
 			if (GE.opts.type != 'lookat') {
-				debug && console.log('Range is only available on \'lookat\' view');
+				GE.debug && console.log('Range is only available on \'lookat\' view');
 				return this;
 			}
 			GE.opts.range = range;
@@ -235,6 +238,13 @@
 		setAltitude: function (altitude) {
 			if (!_initialized) return this;
 			GE.opts.altitude = altitude;
+			GE.setView(GE.opts);
+			return this;
+		},
+		
+		setRoll: function (roll) {
+			if (!_initialized) return this;
+			GE.opts.roll = roll;
 			GE.setView(GE.opts);
 			return this;
 		},
@@ -311,9 +321,9 @@
 					}
 					GE.kmlObjects.push(kmlObject);
 					GE.showKml(kml);
-					debug && console.log('Loaded Kml object from ' + url);
+					GE.debug && console.log('Loaded Kml object from ' + url);
 				} else {
-					debug && console.log('Unable to load Kml object from \'' + url+'\'');
+					GE.debug && console.log('Unable to load Kml object from \'' + url+'\'');
 				}
 				//send the kml object to the callback
 				if(callback) {
@@ -446,7 +456,11 @@
 		
 		stopAnimation: function () {
 			if (!_initialized) return this;
-			ge.getTourPlayer().stop();
+			try{
+				ge.getTourPlayer().stop();
+			} catch(e) {
+				GE.debug && console.log(e);
+			}
 			return this;
 		},
 
